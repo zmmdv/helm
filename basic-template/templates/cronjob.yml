@@ -1,0 +1,67 @@
+{{- if .Values.cronjob.enabled }}
+---
+
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: deployment-restart
+  namespace: {{ .Release.Namespace }}
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-restart
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: ["apps", "extensions"]
+    resources: ["deployments"]
+    resourceNames: ["{{ .Values.fullnameOverride }}"]
+    verbs: ["get", "patch", "list", "watch"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deployment-restart
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployment-restart
+subjects:
+  - kind: ServiceAccount
+    name: deployment-restart
+    namespace: {{ .Release.Namespace }}
+
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ .Values.fullnameOverride }}-restart
+  namespace: {{ .Release.Namespace }}
+spec:
+  concurrencyPolicy: Forbid
+  schedule: '{{ .Values.cronjob.schedule }}'
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          serviceAccountName: deployment-restart
+          restartPolicy: Never
+          containers:
+            - name: kubectl
+              image: bitnami/kubectl
+              command:
+                - 'kubectl'
+                - 'rollout'
+                - 'restart'
+                - 'deployment/{{ .Values.fullnameOverride }}'
+{{- end }}
