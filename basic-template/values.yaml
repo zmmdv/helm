@@ -44,7 +44,7 @@ kubeVersion:
 nameOverride:
 ## @param fullnameOverride String to fully override common.names.fullname
 ##
-fullnameOverride: &fullnameOverride bu-skeleton
+fullnameOverride: &fullnameOverride your-service-name
 ## @param commonLabels Labels to add to all deployed objects
 ##
 commonLabels: {}
@@ -73,8 +73,8 @@ extraDeploy: []
   ## @param image.debug Enable image debug mode
   ##
 image:
-  registry: registry.decluster.ria.com
-  repository: bu-auto-rest/skeleton/dev
+  registry: 
+  repository: 
   tag: latest
   ## Specify a imagePullPolicy
   ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
